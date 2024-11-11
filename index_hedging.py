@@ -26,13 +26,13 @@ def generate_table(long_money):
                                                               "需做空（手）", "已对冲总金额", "未对冲总金额",
                                                               "对冲账户所需总权益", "对冲账户所需保证金", "对冲账户所需可用余额（追保资金）",
                                                               "上日收盘价", "最新价", "持仓量", "合约乘数", "保证金率", "做多1手保证金"])
-    futures_fees_info_df = futures_fees_info_df.rename(columns={"1手市值":"1手合约市值", "持仓量":"市场总持仓量"})
+    futures_fees_info_df = futures_fees_info_df.rename(columns={"1手市值":"1手合约市值（元）", "持仓量":"市场总持仓量"})
     return futures_fees_info_df, update_time
 
 
 # 设置 Streamlit 界面
 st.title("LCD对冲策略计算器")
-st.subheader("请输入您的多头持仓，然后点击查询按钮")
+st.subheader("请输入您的多头持仓，然后点击计算按钮")
 
 # 输入框，用于用户输入多头持仓
 long_money = st.text_input("多头持仓（万元）：", "")
@@ -41,21 +41,37 @@ try:
 except ValueError:
     st.write("多头持仓输入不合法，请重新输入！")
 
-# 计算按钮
-if st.button("计算"):
-    # 如果输入框中有内容且点击查询按钮
-    if long_money > 0:
-        try:
-            # 获取当前的时间和表格数据
-            beijing_tz = timezone(timedelta(hours=8))
-            compute_time_obj = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
-            futures_fees_info_df, update_time = generate_table(long_money)
-            
-            # 显示查询时间和表格
-            st.write(f"点击计算时间：{compute_time_obj}")
-            st.write(f"期货数据更新时间：{update_time}")
-            st.write(futures_fees_info_df.reset_index(drop=True))
-        except Exception:
-            st.write("获取当前期货数据失败，请重试！")
-    else:
-        st.write("多头持仓输入不合法，请重新输入！")
+# 初始化 session_state 用于跟踪按钮状态
+if "button_clicked" not in st.session_state:
+    st.session_state.button_clicked = False
+
+# 创建按钮，显示不同的文本和状态
+if st.button("计算", disabled=st.session_state.button_clicked):
+    # 设置按钮为已点击状态
+    st.session_state.button_clicked = True
+
+    # 显示计算中的动态效果
+    with st.spinner("计算中，请稍候..."):
+        # 如果输入框中有内容且点击查询按钮
+        if long_money > 0:
+            try:
+                # 获取当前的时间和表格数据
+                beijing_tz = timezone(timedelta(hours=8))
+                compute_time_obj = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
+                futures_fees_info_df, update_time = generate_table(long_money)
+                
+                # 显示查询时间
+                st.write(f"点击计算时间：{compute_time_obj}")
+                st.write(f"期货数据更新时间：{update_time}")
+                st.write("")  # 插入一个空行
+                st.write("")
+
+                # 显示表格
+                st.dataframe(futures_fees_info_df.set_index("合约代码", drop=True), use_container_width=True)
+            except Exception:
+                st.write("获取实时期货数据失败，请重试！")
+        else:
+            st.write("多头持仓输入不合法，请重新输入！")
+    
+    # 重置按钮点击状态
+    st.session_state.button_clicked = False
