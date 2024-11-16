@@ -2,6 +2,7 @@ import akshare as ak
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, timezone
+import time
 import re
 import imaplib
 import email
@@ -137,7 +138,7 @@ def extract_email():
                             ji_ti_hou_jin_e = ji_ti_qian_jin_e - float(td_contents[9].replace(',',''))
                             dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
                             if not (han_rong_info.get('产品名称', 0)):
-                                han_rong_info['产品名称'] = ming_cheng
+                                han_rong_info['产品名称'] = ming_cheng[:2]
                                 han_rong_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
                                 han_rong_info['持有份额'] = fen_e
                                 han_rong_info['单位净值'] = dan_wei_jing_zhi
@@ -157,7 +158,7 @@ def extract_email():
                             ji_ti_hou_jin_e = ji_ti_qian_jin_e - float(td_contents[9].replace(',',''))
                             dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
                             if not (wan_yan_info.get('产品名称', 0)):
-                                wan_yan_info['产品名称'] = ming_cheng
+                                wan_yan_info['产品名称'] = ming_cheng[:2]
                                 wan_yan_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
                                 wan_yan_info['持有份额'] = fen_e
                                 wan_yan_info['单位净值'] = dan_wei_jing_zhi
@@ -177,7 +178,7 @@ def extract_email():
                             ji_ti_hou_jin_e = round(xu_ni_jing_zhi * fen_e, 2)
                             dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
                             if not (zheng_ding_info.get('产品名称', 0)):
-                                zheng_ding_info['产品名称'] = ming_cheng
+                                zheng_ding_info['产品名称'] = ming_cheng[:2]
                                 zheng_ding_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
                                 zheng_ding_info['持有份额'] = fen_e
                                 zheng_ding_info['单位净值'] = dan_wei_jing_zhi
@@ -197,7 +198,7 @@ def extract_email():
                             ji_ti_hou_jin_e = round(xu_ni_jing_zhi * fen_e, 2)
                             dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
                             if not (hui_jin_info.get('产品名称', 0)):
-                                hui_jin_info['产品名称'] = ming_cheng
+                                hui_jin_info['产品名称'] = ming_cheng[:2]
                                 hui_jin_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
                                 hui_jin_info['持有份额'] = fen_e
                                 hui_jin_info['单位净值'] = dan_wei_jing_zhi
@@ -217,7 +218,7 @@ def extract_email():
                             ji_ti_hou_jin_e = float(td_contents[12])
                             dang_qi_ye_ji_bao_chou = ji_ti_qian_jin_e - ji_ti_hou_jin_e
                             if not (meng_xi_info.get('产品名称', 0)):
-                                meng_xi_info['产品名称'] = ming_cheng
+                                meng_xi_info['产品名称'] = ming_cheng[:2]
                                 meng_xi_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
                                 meng_xi_info['持有份额'] = fen_e
                                 meng_xi_info['单位净值'] = dan_wei_jing_zhi
@@ -233,33 +234,43 @@ def extract_email():
     return df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou
 
 if __name__ == '__main__':
-    email_df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou \
-        = extract_email()
-    cheng_ben_zong_jin_e = 12369177.80
-    beijing_tz = timezone(timedelta(hours=8))
-    extract_email_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
 
-    # Streamlit 界面
-    st.title("LCD对冲策略计算器")
-    st.subheader("持仓信息")
-    st.write(f"持仓信息刷新时间：{extract_email_time}")
-    st.write(f"成本总金额：{cheng_ben_zong_jin_e:,.2f}")
-    st.write(f"计提前总金额：{ji_ti_qian_zong_jin_e:,.2f}")
-    st.write(f"计提后总金额：{ji_ti_hou_zong_jin_e:,.2f}")
-    st.write(f"当期总业绩报酬：{dang_qi_zong_ye_ji_bao_chou:,.2f}")
-    st.write(f"当期总盈亏（2024年11月8日~至今）：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f}")
-    
-    # 显示持仓信息表格
-    st.dataframe(email_df, use_container_width=True)
+    # 打印持仓信息
+    st.subheader("我的持仓")
+    if "refresh_button_clicked" not in st.session_state:
+        st.session_state.refresh_button_clicked = False
+    if st.button("刷新", disabled=st.session_state.refresh_button_clicked):
+        st.session_state.refresh_button_clicked = True
+        with st.spinner("刷新持仓数据中，请稍候..."):
+            # 获取email信息和时间
+            email_df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou \
+                = extract_email()
+            cheng_ben_zong_jin_e = 12369177.80
+            beijing_tz = timezone(timedelta(hours=8))
+            extract_email_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
+            # 打印持仓信息
+            st.write(f"持仓数据刷新时间：{extract_email_time}")
+            st.write(f"成本总金额：{cheng_ben_zong_jin_e:,.2f}")
+            st.write(f"计提前总金额：{ji_ti_qian_zong_jin_e:,.2f}")
+            st.write(f"计提后总金额：{ji_ti_hou_zong_jin_e:,.2f}")
+            st.write(f"当期总业绩报酬：{dang_qi_zong_ye_ji_bao_chou:,.2f}")
+            st.write(f"当期总盈亏(2024年11月8日~至今)：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f}")
+            # 显示持仓信息表格
+            st.write("")
+            st.dataframe(email_df, use_container_width=True)
+        st.session_state.refresh_button_clicked = False  # 解锁button
+    st.write("")
+    st.write("")
 
-    st.subheader("请输入您想对冲的多头持仓，然后点击计算按钮")
+    # 打印对冲计算器
+    st.subheader("对冲计算器")
     long_money = st.text_input("多头持仓（万元）：", "")
 
-    if "button_clicked" not in st.session_state:
-        st.session_state.button_clicked = False
+    if "compute_button_clicked" not in st.session_state:
+        st.session_state.compute_button_clicked = False
 
-    if st.button("计算", disabled=st.session_state.button_clicked):
-        st.session_state.button_clicked = True
+    if st.button("计算", disabled=st.session_state.compute_button_clicked):
+        st.session_state.compute_button_clicked = True
 
         with st.spinner("计算中，请稍候..."):
             try:
@@ -281,5 +292,4 @@ if __name__ == '__main__':
                         st.write("无法获取期货数据，请检查网络连接或稍后重试。")
                 else:
                     st.write("多头持仓输入不合法，请重新输入！")
-
-        st.session_state.button_clicked = False  # 解锁button
+        st.session_state.compute_button_clicked = False  # 解锁button
