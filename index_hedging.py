@@ -141,12 +141,12 @@ def extract_email():
                             if not (han_rong_info.get('产品名称', 0)):
                                 han_rong_info['产品名称'] = ming_cheng[:2]
                                 han_rong_info['净值日期'] = jing_zhi_ri_qi
-                                han_rong_info['持有份额'] = fen_e
-                                han_rong_info['单位净值'] = dan_wei_jing_zhi
-                                han_rong_info['虚拟净值'] = xu_ni_jing_zhi
                                 han_rong_info['计提前金额'] = ji_ti_qian_jin_e
                                 han_rong_info['计提后金额'] = ji_ti_hou_jin_e
                                 han_rong_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                han_rong_info['持有份额'] = fen_e
+                                han_rong_info['单位净值'] = dan_wei_jing_zhi
+                                han_rong_info['虚拟净值'] = xu_ni_jing_zhi
                         #wan yan
                         if re.search(b'\xe9\xa1\xbd\xe5\xb2\xa9'.decode('utf-8'), body):
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
@@ -162,12 +162,12 @@ def extract_email():
                             if not (wan_yan_info.get('产品名称', 0)):
                                 wan_yan_info['产品名称'] = ming_cheng[:2]
                                 wan_yan_info['净值日期'] = jing_zhi_ri_qi
-                                wan_yan_info['持有份额'] = fen_e
-                                wan_yan_info['单位净值'] = dan_wei_jing_zhi
-                                wan_yan_info['虚拟净值'] = xu_ni_jing_zhi
                                 wan_yan_info['计提前金额'] = ji_ti_qian_jin_e
                                 wan_yan_info['计提后金额'] = ji_ti_hou_jin_e
                                 wan_yan_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                wan_yan_info['持有份额'] = fen_e
+                                wan_yan_info['单位净值'] = dan_wei_jing_zhi
+                                wan_yan_info['虚拟净值'] = xu_ni_jing_zhi
                         #zheng ding
                         if re.search(b'\xe6\xad\xa3\xe5\xae\x9a'.decode('utf-8'), body): #done
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
@@ -183,12 +183,12 @@ def extract_email():
                             if not (zheng_ding_info.get('产品名称', 0)):
                                 zheng_ding_info['产品名称'] = ming_cheng[:2]
                                 zheng_ding_info['净值日期'] = jing_zhi_ri_qi
-                                zheng_ding_info['持有份额'] = fen_e
-                                zheng_ding_info['单位净值'] = dan_wei_jing_zhi
-                                zheng_ding_info['虚拟净值'] = xu_ni_jing_zhi
                                 zheng_ding_info['计提前金额'] = ji_ti_qian_jin_e
                                 zheng_ding_info['计提后金额'] = ji_ti_hou_jin_e
                                 zheng_ding_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                zheng_ding_info['持有份额'] = fen_e
+                                zheng_ding_info['单位净值'] = dan_wei_jing_zhi
+                                zheng_ding_info['虚拟净值'] = xu_ni_jing_zhi
                         #hui jin
                         if re.search(b'\xe6\xb1\x87\xe7\x91\xbe'.decode('utf-8'), body): #done
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
@@ -204,12 +204,12 @@ def extract_email():
                             if not (hui_jin_info.get('产品名称', 0)):
                                 hui_jin_info['产品名称'] = ming_cheng[:2]
                                 hui_jin_info['净值日期'] = jing_zhi_ri_qi
-                                hui_jin_info['持有份额'] = fen_e
-                                hui_jin_info['单位净值'] = dan_wei_jing_zhi
-                                hui_jin_info['虚拟净值'] = xu_ni_jing_zhi
                                 hui_jin_info['计提前金额'] = ji_ti_qian_jin_e
                                 hui_jin_info['计提后金额'] = ji_ti_hou_jin_e
                                 hui_jin_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                hui_jin_info['持有份额'] = fen_e
+                                hui_jin_info['单位净值'] = dan_wei_jing_zhi
+                                hui_jin_info['虚拟净值'] = xu_ni_jing_zhi
                         #meng xi
                         if re.search(b'\xe8\x92\x99\xe7\x8e\xba'.decode('utf-8'), body): #done
                             td_contents = re.findall(r'yahei="">(.*?)</span>', body, flags=re.DOTALL)
@@ -225,12 +225,12 @@ def extract_email():
                             if not (meng_xi_info.get('产品名称', 0)):
                                 meng_xi_info['产品名称'] = ming_cheng[:2]
                                 meng_xi_info['净值日期'] = jing_zhi_ri_qi
-                                meng_xi_info['持有份额'] = fen_e
-                                meng_xi_info['单位净值'] = dan_wei_jing_zhi
-                                meng_xi_info['虚拟净值'] = xu_ni_jing_zhi
                                 meng_xi_info['计提前金额'] = ji_ti_qian_jin_e
                                 meng_xi_info['计提后金额'] = ji_ti_hou_jin_e
                                 meng_xi_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                meng_xi_info['持有份额'] = fen_e
+                                meng_xi_info['单位净值'] = dan_wei_jing_zhi
+                                meng_xi_info['虚拟净值'] = xu_ni_jing_zhi
     df = pd.DataFrame([han_rong_info, wan_yan_info, zheng_ding_info, hui_jin_info, meng_xi_info])
     df = df.sort_values(by="计提前金额", ascending=False).set_index("产品名称", drop=True)
     ji_ti_qian_zong_jin_e = round(df['计提前金额'].sum(), 2)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 
         with st.spinner("计算中，请稍候..."):
             try:
-                long_money = float(long_money)
+                long_money = float(long_money.replace(",", ""))
             except ValueError:
                 st.write("多头持仓输入不合法，请重新输入！")
             else:
