@@ -131,6 +131,7 @@ def extract_email():
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
                             # print(td_contents)
                             ming_cheng = td_contents[1]
+                            jing_zhi_ri_qi = datetime.strptime(td_contents[2], "%Y%m%d").strftime("%Y-%m-%d")
                             fen_e = float(td_contents[6].replace(',',''))
                             dan_wei_jing_zhi = float(td_contents[7].replace(',',''))
                             xu_ni_jing_zhi = float(td_contents[10].replace(',',''))
@@ -139,7 +140,7 @@ def extract_email():
                             dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
                             if not (han_rong_info.get('产品名称', 0)):
                                 han_rong_info['产品名称'] = ming_cheng[:2]
-                                han_rong_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
+                                han_rong_info['净值日期'] = jing_zhi_ri_qi
                                 han_rong_info['持有份额'] = fen_e
                                 han_rong_info['单位净值'] = dan_wei_jing_zhi
                                 han_rong_info['虚拟净值'] = xu_ni_jing_zhi
@@ -151,6 +152,7 @@ def extract_email():
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
                             # print(td_contents)
                             ming_cheng = td_contents[1]
+                            jing_zhi_ri_qi = datetime.strptime(td_contents[2], "%Y%m%d").strftime("%Y-%m-%d")
                             fen_e = float(td_contents[6].replace(',',''))
                             dan_wei_jing_zhi = float(td_contents[7].replace(',',''))
                             xu_ni_jing_zhi = float(td_contents[10].replace(',',''))
@@ -159,7 +161,7 @@ def extract_email():
                             dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
                             if not (wan_yan_info.get('产品名称', 0)):
                                 wan_yan_info['产品名称'] = ming_cheng[:2]
-                                wan_yan_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
+                                wan_yan_info['净值日期'] = jing_zhi_ri_qi
                                 wan_yan_info['持有份额'] = fen_e
                                 wan_yan_info['单位净值'] = dan_wei_jing_zhi
                                 wan_yan_info['虚拟净值'] = xu_ni_jing_zhi
@@ -171,6 +173,7 @@ def extract_email():
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
                             # print(td_contents)
                             ming_cheng = td_contents[2].split('：')[-1]
+                            jing_zhi_ri_qi = td_contents[4].split('：')[-1]
                             fen_e = float(td_contents[7].split('：')[-1].replace(',',''))
                             dan_wei_jing_zhi = float(td_contents[8].split('：')[-1].replace(',',''))
                             xu_ni_jing_zhi = float(td_contents[10].split('：')[-1].replace(',',''))
@@ -179,7 +182,7 @@ def extract_email():
                             dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
                             if not (zheng_ding_info.get('产品名称', 0)):
                                 zheng_ding_info['产品名称'] = ming_cheng[:2]
-                                zheng_ding_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
+                                zheng_ding_info['净值日期'] = jing_zhi_ri_qi
                                 zheng_ding_info['持有份额'] = fen_e
                                 zheng_ding_info['单位净值'] = dan_wei_jing_zhi
                                 zheng_ding_info['虚拟净值'] = xu_ni_jing_zhi
@@ -191,6 +194,7 @@ def extract_email():
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
                             # print(td_contents)
                             ming_cheng = td_contents[2].split('：')[-1]
+                            jing_zhi_ri_qi = td_contents[4].split('：')[-1]
                             fen_e = float(td_contents[7].split('：')[-1].replace(',',''))
                             dan_wei_jing_zhi = float(td_contents[8].split('：')[-1].replace(',',''))
                             xu_ni_jing_zhi = float(td_contents[10].split('：')[-1].replace(',',''))
@@ -199,7 +203,7 @@ def extract_email():
                             dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
                             if not (hui_jin_info.get('产品名称', 0)):
                                 hui_jin_info['产品名称'] = ming_cheng[:2]
-                                hui_jin_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
+                                hui_jin_info['净值日期'] = jing_zhi_ri_qi
                                 hui_jin_info['持有份额'] = fen_e
                                 hui_jin_info['单位净值'] = dan_wei_jing_zhi
                                 hui_jin_info['虚拟净值'] = xu_ni_jing_zhi
@@ -211,6 +215,7 @@ def extract_email():
                             td_contents = re.findall(r'yahei="">(.*?)</span>', body, flags=re.DOTALL)
                             # print(td_contents)
                             ming_cheng = td_contents[5]
+                            jing_zhi_ri_qi = td_contents[3]
                             fen_e = float(td_contents[8].replace(',',''))
                             dan_wei_jing_zhi = float(td_contents[9].replace(',',''))
                             xu_ni_jing_zhi = round(float(td_contents[12])/fen_e, 4)
@@ -219,7 +224,7 @@ def extract_email():
                             dang_qi_ye_ji_bao_chou = ji_ti_qian_jin_e - ji_ti_hou_jin_e
                             if not (meng_xi_info.get('产品名称', 0)):
                                 meng_xi_info['产品名称'] = ming_cheng[:2]
-                                meng_xi_info['更新时间'] = mail_dt.strftime('%Y-%m-%d')
+                                meng_xi_info['净值日期'] = jing_zhi_ri_qi
                                 meng_xi_info['持有份额'] = fen_e
                                 meng_xi_info['单位净值'] = dan_wei_jing_zhi
                                 meng_xi_info['虚拟净值'] = xu_ni_jing_zhi
@@ -236,7 +241,7 @@ def extract_email():
 if __name__ == '__main__':
 
     # 打印持仓信息
-    st.subheader("我的持仓")
+    st.subheader("实时持仓")
     if "refresh_button_clicked" not in st.session_state:
         st.session_state.refresh_button_clicked = False
     if st.button("刷新", disabled=st.session_state.refresh_button_clicked):
