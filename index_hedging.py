@@ -329,19 +329,11 @@ def main():
                 st.error("密码错误！请输入正确的密码。")
                 st.write("")
                 st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
-                st.write("")
                 show_hedging_calculator()
                 return
         else:
             st.session_state.refresh_button_clicked = False
             st.error("输入密码不能为空！请重新输入。")
-            st.write("")
-            st.write("")
-            st.write("")
-            st.write("")
             st.write("")
             st.write("")
             show_hedging_calculator()
