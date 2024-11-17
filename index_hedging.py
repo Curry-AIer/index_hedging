@@ -272,7 +272,7 @@ def extract_email(secret_key):
 def show_hedging_calculator():
     # 打印对冲计算器
     st.subheader("对冲计算器")
-    long_money = st.text_input("想对冲的多头持仓（万元）：", "")
+    long_money = st.text_input("请输入想对冲的多头持仓（万元）：", "")
 
     if "compute_button_clicked" not in st.session_state:
         st.session_state.compute_button_clicked = False
@@ -302,6 +302,10 @@ def show_hedging_calculator():
 
 def main():
     # 打印持仓信息
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
     st.subheader("实时持仓查询")
     if "refresh_button_clicked" not in st.session_state:
         st.session_state.refresh_button_clicked = False
