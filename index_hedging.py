@@ -76,7 +76,6 @@ def generate_table(long_money):
     futures_fees_info_df = futures_fees_info_df.rename(columns={"1手市值":"1手合约市值（元）", "持仓量":"市场总持仓量"})
     return futures_fees_info_df, update_time
 
-
 def extract_email(secret_key):
     email_value_config = {
         'imap_server': b'\x95F\xa50l\x8c<\xb3\xdb\x11M\xc3\xc8\xcas\x84\xd2\x7f\xb6\xceay\x883D\x81nJ\xdc\xde\x8b\x96',
@@ -265,7 +264,7 @@ def extract_email(secret_key):
 def show_hedging_calculator():
     # 打印对冲计算器
     st.subheader("对冲计算器")
-    long_money = st.text_input("多头持仓（万元）：", "")
+    long_money = st.text_input("想对冲的多头持仓（万元）：", "")
 
     if "compute_button_clicked" not in st.session_state:
         st.session_state.compute_button_clicked = False
@@ -297,17 +296,17 @@ def show_hedging_calculator():
 
 def main():
     # 打印持仓信息
-    st.subheader("实时持仓")
+    st.subheader("实时持仓查询")
     if "refresh_button_clicked" not in st.session_state:
         st.session_state.refresh_button_clicked = False
     if "pwd_success" not in st.session_state or not st.session_state.refresh_button_clicked:
         st.session_state["pwd_success"] = False
-        secret_key = st.text_input("请输入密码后点击刷新：", type="password", key="pwd_input")
+        secret_key = st.text_input("请输入密码：", type="password", key="pwd_input")
     if st.session_state["pwd_success"]:
         st.session_state["pwd_input"] = ""
         st.session_state.refresh_button_clicked = False
-        secret_key = st.text_input("请输入密码后点击刷新：", type="password", key="pwd_input")
-    if st.button("刷新", disabled=st.session_state.refresh_button_clicked):
+        secret_key = st.text_input("请输入密码：", type="password", key="pwd_input")
+    if st.button("查询", disabled=st.session_state.refresh_button_clicked):
         st.session_state.refresh_button_clicked = True
         if secret_key:
             # 用户点击确认提交后验证
@@ -319,12 +318,20 @@ def main():
                     st.rerun()
             else:
                 st.session_state.refresh_button_clicked = False
-                st.error("密码验证失败！请输入正确的密码。")
+                st.error("密码错误！请输入正确的密码。")
+                st.write("")
+                st.write("")
+                st.write("")
+                st.write("")
                 show_hedging_calculator()
                 return
         else:
             st.session_state.refresh_button_clicked = False
             st.error("输入密码不能为空！请重新输入。")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
             show_hedging_calculator()
             return
     if (st.session_state["pwd_success"]):
@@ -350,7 +357,10 @@ def main():
             st.dataframe(email_df, use_container_width=True)
     st.write("")
     st.write("")
+    st.write("")
+    st.write("")
     show_hedging_calculator()
+
 
 if __name__ == '__main__':
     main()
