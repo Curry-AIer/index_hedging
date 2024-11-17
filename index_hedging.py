@@ -304,8 +304,6 @@ def main():
     # 打印持仓信息
     st.write("")
     st.write("")
-    st.write("")
-    st.write("")
     st.subheader("实时持仓查询")
     if "refresh_button_clicked" not in st.session_state:
         st.session_state.refresh_button_clicked = False
@@ -333,11 +331,15 @@ def main():
                 st.write("")
                 st.write("")
                 st.write("")
+                st.write("")
+                st.write("")
                 show_hedging_calculator()
                 return
         else:
             st.session_state.refresh_button_clicked = False
             st.error("输入密码不能为空！请重新输入。")
+            st.write("")
+            st.write("")
             st.write("")
             st.write("")
             st.write("")
@@ -365,6 +367,8 @@ def main():
             # 显示持仓信息表格
             st.write("")
             st.table(email_df)
+    st.write("")
+    st.write("")
     st.write("")
     st.write("")
     st.write("")
