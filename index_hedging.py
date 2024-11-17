@@ -1,13 +1,34 @@
 import akshare as ak
 import pandas as pd
+from pypinyin import pinyin, Style
 import streamlit as st
 from datetime import datetime, timedelta, timezone
-import time
 import re
 import imaplib
 import email
 from email.utils import parsedate_to_datetime
 from email.header import make_header, decode_header
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding, hashes
+
+def hash_string(input_string, algorithm=hashes.SHA512):
+    data = input_string.encode('utf-8')
+    digest = hashes.Hash(algorithm(), backend=default_backend())
+    digest.update(data)
+    hash_bytes = digest.finalize()
+    return hash_bytes.hex()
+
+def decrypt_string(encrypted_data, key):
+    key = key.ljust(16, b'\0')
+    iv = encrypted_data[:16]
+    ciphertext = encrypted_data[16:]
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+    decrypted_data = decryptor.update(ciphertext) + decryptor.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    original_data = unpadder.update(decrypted_data) + unpadder.finalize()
+    return original_data.decode()
 
 def fetch_futures_fees_info():
     error_placeholder = st.empty()  # 创建一个占位符
@@ -56,14 +77,14 @@ def generate_table(long_money):
     return futures_fees_info_df, update_time
 
 
-def extract_email():
+def extract_email(secret_key):
     email_value_config = {
-        'imap_server': 'imap.qq.com',
-        'username': '150494987@qq.com',
-        'password': 'wjsmquczdtdfcadj',
+        'imap_server': b'\x95F\xa50l\x8c<\xb3\xdb\x11M\xc3\xc8\xcas\x84\xd2\x7f\xb6\xceay\x883D\x81nJ\xdc\xde\x8b\x96',
+        'username': b'\xda=q\xb7\xc6\x7f\x06\xb1;\x90\xee#\xce\x81`\x13\xe8\xe2\x9cR\xf4vg\x8fVz<\r\xdboT\x13\xc4W:\x84\x9aAbo^\n\x1d\xba\x1d\xb9=\x93',
+        'password': b'L\x94\xf7\xe7\xf4\xf4\x89\x82R\xe4\x90\x1e\xea\x8e\x03\xd9\x9d>\x81\xd6\x0c\r\x08e@\xde\xd8\xb5\xa5\xe9~\x97}\xdb@\xf7\xbf$1\xf8\xbbhX\xa1G\xe5\x04\x1a',
     }
-    email_server = imaplib.IMAP4_SSL(email_value_config['imap_server'])
-    email_server.login(email_value_config["username"], email_value_config['password'])
+    email_server = imaplib.IMAP4_SSL(decrypt_string(email_value_config['imap_server'], secret_key.encode('utf-8')))
+    email_server.login(decrypt_string(email_value_config["username"], secret_key.encode('utf-8')), decrypt_string(email_value_config['password'], secret_key.encode('utf-8')))
     email_server.select('INBOX')  # 选择【收件箱】
     # 选择收件箱
     beijing_time = datetime.utcnow() + timedelta(hours=8)
@@ -126,6 +147,9 @@ def extract_email():
                     elif content_type == "text/html":  # HTML格式邮件
                         body = part.get_payload(decode=True).decode('utf-8', errors='ignore')
                         # print("净值信息：")
+                        get_initials = lambda text: ''.join(
+                            map(lambda x: x[0].upper(), pinyin(text, style=Style.FIRST_LETTER))
+                        )
                         #han rong
                         if re.search(b'\xe7\xbf\xb0\xe8\x8d\xa3'.decode('utf-8'), body):
                             td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
@@ -139,7 +163,7 @@ def extract_email():
                             ji_ti_hou_jin_e = ji_ti_qian_jin_e - float(td_contents[9].replace(',',''))
                             dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
                             if not (han_rong_info.get('产品名称', 0)):
-                                han_rong_info['产品名称'] = ming_cheng[:2]
+                                han_rong_info['产品名称'] = get_initials(ming_cheng[:2])
                                 han_rong_info['净值日期'] = jing_zhi_ri_qi
                                 han_rong_info['计提前金额'] = ji_ti_qian_jin_e
                                 han_rong_info['计提后金额'] = ji_ti_hou_jin_e
@@ -160,7 +184,7 @@ def extract_email():
                             ji_ti_hou_jin_e = ji_ti_qian_jin_e - float(td_contents[9].replace(',',''))
                             dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
                             if not (wan_yan_info.get('产品名称', 0)):
-                                wan_yan_info['产品名称'] = ming_cheng[:2]
+                                wan_yan_info['产品名称'] = get_initials(ming_cheng[:2])
                                 wan_yan_info['净值日期'] = jing_zhi_ri_qi
                                 wan_yan_info['计提前金额'] = ji_ti_qian_jin_e
                                 wan_yan_info['计提后金额'] = ji_ti_hou_jin_e
@@ -181,7 +205,7 @@ def extract_email():
                             ji_ti_hou_jin_e = round(xu_ni_jing_zhi * fen_e, 2)
                             dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
                             if not (zheng_ding_info.get('产品名称', 0)):
-                                zheng_ding_info['产品名称'] = ming_cheng[:2]
+                                zheng_ding_info['产品名称'] = get_initials(ming_cheng[:2])
                                 zheng_ding_info['净值日期'] = jing_zhi_ri_qi
                                 zheng_ding_info['计提前金额'] = ji_ti_qian_jin_e
                                 zheng_ding_info['计提后金额'] = ji_ti_hou_jin_e
@@ -202,7 +226,7 @@ def extract_email():
                             ji_ti_hou_jin_e = round(xu_ni_jing_zhi * fen_e, 2)
                             dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
                             if not (hui_jin_info.get('产品名称', 0)):
-                                hui_jin_info['产品名称'] = ming_cheng[:2]
+                                hui_jin_info['产品名称'] = get_initials(ming_cheng[:2])
                                 hui_jin_info['净值日期'] = jing_zhi_ri_qi
                                 hui_jin_info['计提前金额'] = ji_ti_qian_jin_e
                                 hui_jin_info['计提后金额'] = ji_ti_hou_jin_e
@@ -223,7 +247,7 @@ def extract_email():
                             ji_ti_hou_jin_e = float(td_contents[12])
                             dang_qi_ye_ji_bao_chou = ji_ti_qian_jin_e - ji_ti_hou_jin_e
                             if not (meng_xi_info.get('产品名称', 0)):
-                                meng_xi_info['产品名称'] = ming_cheng[:2]
+                                meng_xi_info['产品名称'] = get_initials(ming_cheng[:2])
                                 meng_xi_info['净值日期'] = jing_zhi_ri_qi
                                 meng_xi_info['计提前金额'] = ji_ti_qian_jin_e
                                 meng_xi_info['计提后金额'] = ji_ti_hou_jin_e
@@ -238,35 +262,7 @@ def extract_email():
     dang_qi_zong_ye_ji_bao_chou = ji_ti_qian_zong_jin_e - ji_ti_hou_zong_jin_e
     return df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou
 
-if __name__ == '__main__':
-
-    # 打印持仓信息
-    st.subheader("实时持仓")
-    if "refresh_button_clicked" not in st.session_state:
-        st.session_state.refresh_button_clicked = False
-    if st.button("刷新", disabled=st.session_state.refresh_button_clicked):
-        st.session_state.refresh_button_clicked = True
-        with st.spinner("刷新持仓数据中，请稍候..."):
-            # 获取email信息和时间
-            email_df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou \
-                = extract_email()
-            cheng_ben_zong_jin_e = 12369177.80
-            beijing_tz = timezone(timedelta(hours=8))
-            extract_email_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
-            # 打印持仓信息
-            st.write(f"持仓数据刷新时间：{extract_email_time}")
-            st.write(f"成本总金额：{cheng_ben_zong_jin_e:,.2f}")
-            st.write(f"计提前总金额：{ji_ti_qian_zong_jin_e:,.2f}")
-            st.write(f"计提后总金额：{ji_ti_hou_zong_jin_e:,.2f}")
-            st.write(f"当期总业绩报酬：{dang_qi_zong_ye_ji_bao_chou:,.2f}")
-            st.write(f"当期总盈亏(2024年11月8日~至今)：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f}")
-            # 显示持仓信息表格
-            st.write("")
-            st.dataframe(email_df, use_container_width=True)
-        st.session_state.refresh_button_clicked = False  # 解锁button
-    st.write("")
-    st.write("")
-
+def show_hedging_calculator():
     # 打印对冲计算器
     st.subheader("对冲计算器")
     long_money = st.text_input("多头持仓（万元）：", "")
@@ -298,3 +294,62 @@ if __name__ == '__main__':
                 else:
                     st.write("多头持仓输入不合法，请重新输入！")
         st.session_state.compute_button_clicked = False  # 解锁button
+
+def main():
+    # 打印持仓信息
+    st.subheader("实时持仓")
+    if "refresh_button_clicked" not in st.session_state:
+        st.session_state.refresh_button_clicked = False
+    if "pwd_success" not in st.session_state or not st.session_state.refresh_button_clicked:
+        st.session_state["pwd_success"] = False
+        secret_key = st.text_input("请输入密码后点击刷新：", type="password", key="pwd_input")
+    if st.session_state["pwd_success"]:
+        st.session_state["pwd_input"] = ""
+        secret_key = st.text_input("请输入密码后点击刷新：", type="password", key="pwd_input")
+    if st.button("刷新", disabled=st.session_state.refresh_button_clicked):
+        st.session_state.refresh_button_clicked = True
+        if secret_key:
+            # 用户点击确认提交后验证
+            pwd_hash_bytes = "2a2b70719d04a98115a5c28904f5f063954cb7c39783a0f25c5aacc6721d4145cd3e51324b559f5daab225c53442ed6da6a006d1c9f7386baaeeaf24bc005a84"
+            if hash_string(secret_key) == pwd_hash_bytes:
+                st.session_state["pwd_success"] = True
+                st.session_state["secret_key"] = secret_key
+                if (st.session_state.refresh_button_clicked):
+                    st.rerun()
+            else:
+                st.session_state.refresh_button_clicked = False
+                st.error("密码验证失败！请输入正确的密码。")
+                show_hedging_calculator()
+                return
+        else:
+            st.session_state.refresh_button_clicked = False
+            st.error("输入密码不能为空！请重新输入。")
+            show_hedging_calculator()
+            return
+    if (st.session_state["pwd_success"]):
+        st.session_state["pwd_success"] = False
+        st.session_state.refresh_button_clicked = False
+        st.success("密码验证成功！")
+        with st.spinner("刷新持仓数据中，请稍候..."):
+            # 获取时间和Email信息
+            beijing_tz = timezone(timedelta(hours=8))
+            extract_email_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
+            email_df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou \
+                = extract_email(st.session_state["secret_key"])
+            cheng_ben_zong_jin_e = 12369177.80
+            # 打印持仓信息
+            st.write(f"持仓数据刷新时间：{extract_email_time}")
+            st.write(f"成本总金额：{cheng_ben_zong_jin_e:,.2f}")
+            st.write(f"计提前总金额：{ji_ti_qian_zong_jin_e:,.2f}")
+            st.write(f"计提后总金额：{ji_ti_hou_zong_jin_e:,.2f}")
+            st.write(f"当期总业绩报酬：{dang_qi_zong_ye_ji_bao_chou:,.2f}")
+            st.write(f"当期总盈亏(2024年11月8日~至今)：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f}")
+            # 显示持仓信息表格
+            st.write("")
+            st.dataframe(email_df, use_container_width=True)
+    st.write("")
+    st.write("")
+    show_hedging_calculator()
+
+if __name__ == '__main__':
+    main()
