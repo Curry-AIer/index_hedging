@@ -45,7 +45,7 @@ def fetch_futures_fees_info():
 
 def generate_table(long_money):
     """生成表格"""
-    long_money *= 10000
+    long_money = float(long_money)*10000
     futures_fees_info_df = fetch_futures_fees_info()
 
     if futures_fees_info_df.empty:
@@ -63,11 +63,11 @@ def generate_table(long_money):
     futures_fees_info_df["实时涨跌幅"] = (futures_fees_info_df["最新价"] / futures_fees_info_df["上日收盘价"] - 1).apply(lambda x: f"{x:+.2%}")
     update_time = futures_fees_info_df["更新时间"].iloc[-1]
 
-    futures_fees_info_df["需做空（手）"] = (long_money // futures_fees_info_df["1手市值"]).astype(int)
-    futures_fees_info_df["已对冲总金额"] = (futures_fees_info_df["需做空（手）"] * futures_fees_info_df["1手市值"]).astype(int)
-    futures_fees_info_df["未对冲总金额"] = (long_money - futures_fees_info_df["已对冲总金额"]).astype(int)
-    futures_fees_info_df["对冲账户所需保证金"] = (futures_fees_info_df["已对冲总金额"] * row["做空保证金率（按金额）"]).astype(int)
-    futures_fees_info_df["对冲账户所需可用余额（追保资金）"] = (futures_fees_info_df["已对冲总金额"]*0.08).astype(int)
+    futures_fees_info_df["需做空（手）"] = (long_money // futures_fees_info_df["1手市值"]).astype('int64')
+    futures_fees_info_df["已对冲总金额"] = (futures_fees_info_df["需做空（手）"] * futures_fees_info_df["1手市值"]).astype('int64')
+    futures_fees_info_df["未对冲总金额"] = (long_money - futures_fees_info_df["已对冲总金额"]).astype('int64')
+    futures_fees_info_df["对冲账户所需保证金"] = (futures_fees_info_df["已对冲总金额"] * row["做空保证金率（按金额）"]).astype('int64')
+    futures_fees_info_df["对冲账户所需可用余额（追保资金）"] = (futures_fees_info_df["已对冲总金额"]*0.08).astype('int64')
     futures_fees_info_df["对冲账户所需总权益"] = futures_fees_info_df["对冲账户所需保证金"] + futures_fees_info_df["对冲账户所需可用余额（追保资金）"]
     futures_fees_info_df = futures_fees_info_df.filter(items=["合约代码", "合约名称", "1手市值",
                                                               "需做空（手）", "已对冲总金额", "未对冲总金额",
@@ -259,6 +259,14 @@ def extract_email(secret_key):
     ji_ti_qian_zong_jin_e = round(df['计提前金额'].sum(), 2)
     ji_ti_hou_zong_jin_e = round(df['计提后金额'].sum(), 2)
     dang_qi_zong_ye_ji_bao_chou = ji_ti_qian_zong_jin_e - ji_ti_hou_zong_jin_e
+    df = df.style.format({
+        '计提前金额': '{:,.2f}',
+        '计提后金额': '{:,.2f}',
+        '当期业绩报酬': '{:,.2f}',
+        '持有份额': '{:,.2f}',
+        '单位净值': '{:,.4f}',
+        '虚拟净值': '{:,.4f}'
+    })
     return df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou
 
 def show_hedging_calculator():
@@ -270,8 +278,6 @@ def show_hedging_calculator():
         st.session_state.compute_button_clicked = False
 
     if st.button("计算", disabled=st.session_state.compute_button_clicked):
-        st.session_state.compute_button_clicked = True
-
         with st.spinner("计算中，请稍候..."):
             try:
                 long_money = float(long_money.replace(",", ""))
@@ -354,7 +360,7 @@ def main():
             st.write(f"当期总盈亏(2024年11月8日~至今)：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f}")
             # 显示持仓信息表格
             st.write("")
-            st.dataframe(email_df, use_container_width=True)
+            st.table(email_df)
     st.write("")
     st.write("")
     st.write("")
