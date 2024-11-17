@@ -305,6 +305,7 @@ def main():
         secret_key = st.text_input("请输入密码后点击刷新：", type="password", key="pwd_input")
     if st.session_state["pwd_success"]:
         st.session_state["pwd_input"] = ""
+        st.session_state.refresh_button_clicked = False
         secret_key = st.text_input("请输入密码后点击刷新：", type="password", key="pwd_input")
     if st.button("刷新", disabled=st.session_state.refresh_button_clicked):
         st.session_state.refresh_button_clicked = True
