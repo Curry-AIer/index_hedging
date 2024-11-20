@@ -355,7 +355,7 @@ def main():
             st.write(f"计提前总金额：{ji_ti_qian_zong_jin_e:,.2f}")
             st.write(f"计提后总金额：{ji_ti_hou_zong_jin_e:,.2f}")
             st.write(f"当期总业绩报酬：{dang_qi_zong_ye_ji_bao_chou:,.2f}")
-            st.write(f"当期总盈亏(2024年11月8日~至今)：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f}")
+            st.write(f"当期总盈亏(2024年11月8日~至今)：{(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e):+,.2f} \({(ji_ti_hou_zong_jin_e - cheng_ben_zong_jin_e)/cheng_ben_zong_jin_e:+.2%}\)")
             # 显示持仓信息表格
             st.write("")
             st.table(email_df)
