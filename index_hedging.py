@@ -348,7 +348,7 @@ def main():
             extract_email_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
             email_df, ji_ti_qian_zong_jin_e, ji_ti_hou_zong_jin_e, dang_qi_zong_ye_ji_bao_chou \
                 = extract_email(st.session_state["secret_key"])
-            cheng_ben_zong_jin_e = 12369183.80
+            cheng_ben_zong_jin_e = 12429177.80
             # 打印持仓信息
             st.write(f"持仓数据刷新时间：{extract_email_time}")
             st.write(f"成本总金额：{cheng_ben_zong_jin_e:,.2f}")
