@@ -53,7 +53,7 @@ def generate_table(long_money):
 
     # 以下为表格计算代码
     futures_fees_info_df = futures_fees_info_df[futures_fees_info_df['合约代码'].str.contains('IM|IC', regex=True)]
-    futures_fees_info_df["做多保证金率（按金额）"] = pd.Series(0.14, index=futures_fees_info_df.index, dtype='float32')
+    futures_fees_info_df["做多保证金率（按金额）"] = pd.Series(0.256, index=futures_fees_info_df.index, dtype='float32')
     for index, row in futures_fees_info_df.iterrows():
         row["最新价"] = row["最新价"] if row["最新价"] > 100 else row["上日收盘价"]
         futures_fees_info_df.loc[index,"最新价"] = row["最新价"]
