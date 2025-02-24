@@ -53,7 +53,7 @@ def generate_table(long_money):
 
     # 以下为表格计算代码
     futures_fees_info_df = futures_fees_info_df[futures_fees_info_df['合约代码'].str.contains('IM|IC', regex=True)]
-    futures_fees_info_df["做多保证金率（按金额）"] = pd.Series(0.256, index=futures_fees_info_df.index, dtype='float32')
+    futures_fees_info_df["做多保证金率（按金额）"] = pd.Series(0.14, index=futures_fees_info_df.index, dtype='float32')
     for index, row in futures_fees_info_df.iterrows():
         row["最新价"] = row["最新价"] if row["最新价"] > 100 else row["上日收盘价"]
         futures_fees_info_df.loc[index,"最新价"] = row["最新价"]
@@ -64,12 +64,12 @@ def generate_table(long_money):
     futures_fees_info_df["实时涨跌幅"] = (futures_fees_info_df["最新价"] / futures_fees_info_df["上日收盘价"] - 1).apply(lambda x: f"{x:+.2%}")
     update_time = futures_fees_info_df["更新时间"].iloc[-1]
 
-    futures_fees_info_df["需做空（手）"] = (long_money // futures_fees_info_df["1手市值"]).astype('int64')
+    futures_fees_info_df["需做空（手）"] = ((long_money * 0.79) // futures_fees_info_df["1手市值"]).astype('int64')
     futures_fees_info_df["已对冲总金额"] = (futures_fees_info_df["需做空（手）"] * futures_fees_info_df["1手市值"]).astype('int64')
-    futures_fees_info_df["未对冲总金额"] = (long_money - futures_fees_info_df["已对冲总金额"]).astype('int64')
-    futures_fees_info_df["对冲账户所需保证金"] = (futures_fees_info_df["已对冲总金额"] * row["做空保证金率（按金额）"]).astype('int64')
-    futures_fees_info_df["对冲账户所需总权益"] = pd.Series(int(long_money * 0.168), index=futures_fees_info_df.index, dtype='int64')
-    futures_fees_info_df["对冲账户所需可用余额（追保资金）"] = (futures_fees_info_df["对冲账户所需总权益"] - futures_fees_info_df["对冲账户所需保证金"]).astype('int64')
+    futures_fees_info_df["未对冲总金额"] = (long_money * 0.79 - futures_fees_info_df["已对冲总金额"]).astype('int64')
+    futures_fees_info_df["对冲账户所需保证金"] = (futures_fees_info_df["已对冲总金额"] * row["做多保证金率（按金额）"]).astype('int64')
+    futures_fees_info_df["对冲账户所需总权益"] = pd.Series(int(long_money * 0.21), index=futures_fees_info_df.index, dtype='int64')
+    futures_fees_info_df["对冲账户可用余额（追保资金）"] = (futures_fees_info_df["对冲账户所需总权益"] - futures_fees_info_df["对冲账户所需保证金"]).astype('int64')
     futures_fees_info_df = futures_fees_info_df.filter(items=["合约代码", "合约名称", "1手市值",
                                                               "需做空（手）", "已对冲总金额", "未对冲总金额",
                                                               "对冲账户所需总权益", "对冲账户所需保证金", "对冲账户所需可用余额（追保资金）",
@@ -274,7 +274,7 @@ def extract_email(secret_key):
 def show_hedging_calculator():
     # 打印对冲计算器
     st.subheader("对冲计算器")
-    long_money = st.text_input("请输入想对冲的多头持仓（万元）：", "")
+    long_money = st.text_input("请输入计提前金额（万元）：", "")
 
     if "compute_button_clicked" not in st.session_state:
         st.session_state.compute_button_clicked = False
