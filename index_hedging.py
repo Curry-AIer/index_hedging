@@ -274,7 +274,7 @@ def extract_email(secret_key):
 def show_hedging_calculator():
     # 打印对冲计算器
     st.subheader("对冲计算器")
-    long_money = st.text_input("请输入计提前金额（万元）：", "")
+    long_money = st.text_input("请输入考虑杠杆的资金总额（万元）：", "")
 
     if "compute_button_clicked" not in st.session_state:
         st.session_state.compute_button_clicked = False
