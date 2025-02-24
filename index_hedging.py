@@ -74,7 +74,7 @@ def generate_table(long_money):
                                                               "需做空（手）", "已对冲总金额", "未对冲总金额",
                                                               "对冲账户所需总权益", "对冲账户所需保证金", "对冲账户所需可用余额（追保资金）",
                                                               "上日收盘价", "最新价", "实时涨跌幅", "持仓量", "合约乘数", "做多保证金率（按金额）", "做多1手保证金"])
-    futures_fees_info_df["做多保证金率（按金额）"] = futures_fees_info_df["做多保证金率（按金额）"].apply(lambda x: f"{x:+.2%}")
+    futures_fees_info_df["做多保证金率（按金额）"] = futures_fees_info_df["做多保证金率（按金额）"].apply(lambda x: f"{x:.2%}")
     futures_fees_info_df = futures_fees_info_df.rename(columns={"1手市值":"1手合约市值（元）", "持仓量":"市场总持仓量", "做多保证金率（按金额）":"保证金率"})
     return futures_fees_info_df, update_time
 
