@@ -256,7 +256,7 @@ def extract_email(secret_key):
                                 meng_xi_info['持有份额'] = fen_e
                                 meng_xi_info['单位净值'] = dan_wei_jing_zhi
                                 meng_xi_info['虚拟净值'] = xu_ni_jing_zhi
-    df = pd.DataFrame([han_rong_info, wan_yan_info, zheng_ding_info, hui_jin_info, meng_xi_info])
+    df = pd.DataFrame([han_rong_info, wan_yan_info, hui_jin_info, meng_xi_info])
     df = df.sort_values(by="计提前金额", ascending=False).set_index("产品名称", drop=True)
     ji_ti_qian_zong_jin_e = round(df['计提前金额'].sum(), 2)
     ji_ti_hou_zong_jin_e = round(df['计提后金额'].sum(), 2)
