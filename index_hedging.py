@@ -64,11 +64,11 @@ def generate_table(long_money):
     futures_fees_info_df["实时涨跌幅"] = (futures_fees_info_df["最新价"] / futures_fees_info_df["上日收盘价"] - 1).apply(lambda x: f"{x:+.2%}")
     update_time = futures_fees_info_df["更新时间"].iloc[-1]
 
-    futures_fees_info_df["需做空（手）"] = ((long_money * 0.79) // futures_fees_info_df["1手市值"]).astype('int64')
+    futures_fees_info_df["需做空（手）"] = (long_money // futures_fees_info_df["1手市值"]).astype('int64')
     futures_fees_info_df["已对冲总金额"] = (futures_fees_info_df["需做空（手）"] * futures_fees_info_df["1手市值"]).astype('int64')
-    futures_fees_info_df["未对冲总金额"] = (long_money * 0.79 - futures_fees_info_df["已对冲总金额"]).astype('int64')
+    futures_fees_info_df["未对冲总金额"] = (long_money - futures_fees_info_df["已对冲总金额"]).astype('int64')
     futures_fees_info_df["对冲账户所需保证金"] = (futures_fees_info_df["已对冲总金额"] * row["做多保证金率（按金额）"]).astype('int64')
-    futures_fees_info_df["对冲账户所需总权益"] = pd.Series(int(long_money * 0.21), index=futures_fees_info_df.index, dtype='int64')
+    futures_fees_info_df["对冲账户所需总权益"] = pd.Series(int(futures_fees_info_df["对冲账户所需保证金"] + long_money * 0.1), index=futures_fees_info_df.index, dtype='int64')
     futures_fees_info_df["对冲账户可用余额（追保资金）"] = (futures_fees_info_df["对冲账户所需总权益"] - futures_fees_info_df["对冲账户所需保证金"]).astype('int64')
     futures_fees_info_df = futures_fees_info_df.filter(items=["合约代码", "合约名称", "1手市值",
                                                               "需做空（手）", "已对冲总金额", "未对冲总金额",
@@ -117,7 +117,7 @@ def extract_email(secret_key):
     sorted_mailidlist = [mail[0] for mail in sorted_mail_with_dates]
 
     # 解析内容：
-    han_rong_info, wan_yan_1_info, wan_yan_3_info, zheng_ding_info, hui_jin_info, meng_xi_info = {}, {}, {}, {}, {}, {}
+    wan_yan_1_info, wan_yan_3_info, kai_du_info, liang_chuang_info, han_rong_info, zheng_ding_info, hui_jin_info, meng_xi_info = {}, {}, {}, {}, {}, {}, {}, {}
     for mail_id in sorted_mailidlist:
         result, data = email_server.fetch(mail_id, '(RFC822)')  # 通过邮件id获取邮件
         email_message = email.message_from_bytes(data[0][1])  # 邮件内容（未解析）
@@ -214,6 +214,48 @@ def extract_email(secret_key):
                                 wan_yan_3_info['持有份额'] = fen_e
                                 wan_yan_3_info['单位净值'] = dan_wei_jing_zhi
                                 wan_yan_3_info['虚拟净值'] = xu_ni_jing_zhi
+                        #kai du
+                        if re.search(b'\xe5\x87\xaf\xe8\xaf\xbb'.decode('utf-8'), body):
+                            td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
+                            # print(td_contents)
+                            ming_cheng = td_contents[1]
+                            jing_zhi_ri_qi = datetime.strptime(td_contents[2], "%Y%m%d").strftime("%Y-%m-%d")
+                            fen_e = float(td_contents[6].replace(',',''))
+                            dan_wei_jing_zhi = float(td_contents[7].replace(',',''))
+                            xu_ni_jing_zhi = float(td_contents[10].replace(',',''))
+                            ji_ti_qian_jin_e = float(td_contents[5].replace(',',''))
+                            ji_ti_hou_jin_e = ji_ti_qian_jin_e - float(td_contents[9].replace(',',''))
+                            dang_qi_ye_ji_bao_chou = float(td_contents[9].replace(',',''))
+                            if not (kai_du_info.get('产品名称', 0)):
+                                kai_du_info['产品名称'] = get_initials(ming_cheng[:2])
+                                kai_du_info['净值日期'] = jing_zhi_ri_qi
+                                kai_du_info['计提前金额'] = ji_ti_qian_jin_e
+                                kai_du_info['计提后金额'] = ji_ti_hou_jin_e
+                                kai_du_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                kai_du_info['持有份额'] = fen_e
+                                kai_du_info['单位净值'] = dan_wei_jing_zhi
+                                kai_du_info['虚拟净值'] = xu_ni_jing_zhi
+                        #liang chuang
+                        if re.search(b'\xe9\x87\x8f\xe5\x88\x9b'.decode('utf-8'), body): #done
+                            td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
+                            # print(td_contents)
+                            ming_cheng = td_contents[2].split('：')[-1]
+                            jing_zhi_ri_qi = td_contents[4].split('：')[-1]
+                            fen_e = float(td_contents[7].split('：')[-1].replace(',',''))
+                            dan_wei_jing_zhi = float(td_contents[8].split('：')[-1].replace(',',''))
+                            xu_ni_jing_zhi = float(td_contents[10].split('：')[-1].replace(',',''))
+                            ji_ti_qian_jin_e = round(dan_wei_jing_zhi * fen_e, 2)
+                            ji_ti_hou_jin_e = round(xu_ni_jing_zhi * fen_e, 2)
+                            dang_qi_ye_ji_bao_chou = round(ji_ti_qian_jin_e - ji_ti_hou_jin_e, 2)
+                            if not (liang_chuang_info.get('产品名称', 0)):
+                                liang_chuang_info['产品名称'] = get_initials(ming_cheng[:2])
+                                liang_chuang_info['净值日期'] = jing_zhi_ri_qi
+                                liang_chuang_info['计提前金额'] = ji_ti_qian_jin_e
+                                liang_chuang_info['计提后金额'] = ji_ti_hou_jin_e
+                                liang_chuang_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                                liang_chuang_info['持有份额'] = fen_e
+                                liang_chuang_info['单位净值'] = dan_wei_jing_zhi
+                                liang_chuang_info['虚拟净值'] = xu_ni_jing_zhi
                         # #zheng ding
                         # if re.search(b'\xe6\xad\xa3\xe5\xae\x9a'.decode('utf-8'), body): #done
                         #     td_contents = re.findall(r'<td>(.*?)</td>', body, flags=re.DOTALL)
@@ -256,28 +298,28 @@ def extract_email(secret_key):
                         #         hui_jin_info['持有份额'] = fen_e
                         #         hui_jin_info['单位净值'] = dan_wei_jing_zhi
                         #         hui_jin_info['虚拟净值'] = xu_ni_jing_zhi
-                        #meng xi
-                        if re.search(b'\xe8\x92\x99\xe7\x8e\xba'.decode('utf-8'), body): #done
-                            td_contents = re.findall(r'yahei="">(.*?)</span>', body, flags=re.DOTALL)
-                            # print(td_contents)
-                            ming_cheng = td_contents[5]
-                            jing_zhi_ri_qi = td_contents[3]
-                            fen_e = float(td_contents[8].replace(',',''))
-                            dan_wei_jing_zhi = float(td_contents[9].replace(',',''))
-                            xu_ni_jing_zhi = round(float(td_contents[12])/fen_e, 4)
-                            ji_ti_qian_jin_e = float(td_contents[11])
-                            ji_ti_hou_jin_e = float(td_contents[12])
-                            dang_qi_ye_ji_bao_chou = ji_ti_qian_jin_e - ji_ti_hou_jin_e
-                            if not (meng_xi_info.get('产品名称', 0)):
-                                meng_xi_info['产品名称'] = get_initials(ming_cheng[:2])
-                                meng_xi_info['净值日期'] = jing_zhi_ri_qi
-                                meng_xi_info['计提前金额'] = ji_ti_qian_jin_e
-                                meng_xi_info['计提后金额'] = ji_ti_hou_jin_e
-                                meng_xi_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
-                                meng_xi_info['持有份额'] = fen_e
-                                meng_xi_info['单位净值'] = dan_wei_jing_zhi
-                                meng_xi_info['虚拟净值'] = xu_ni_jing_zhi
-    df = pd.DataFrame([wan_yan_1_info, wan_yan_3_info, meng_xi_info])
+                        # #meng xi
+                        # if re.search(b'\xe8\x92\x99\xe7\x8e\xba'.decode('utf-8'), body): #done
+                        #     td_contents = re.findall(r'yahei="">(.*?)</span>', body, flags=re.DOTALL)
+                        #     # print(td_contents)
+                        #     ming_cheng = td_contents[5]
+                        #     jing_zhi_ri_qi = td_contents[3]
+                        #     fen_e = float(td_contents[8].replace(',',''))
+                        #     dan_wei_jing_zhi = float(td_contents[9].replace(',',''))
+                        #     xu_ni_jing_zhi = round(float(td_contents[12])/fen_e, 4)
+                        #     ji_ti_qian_jin_e = float(td_contents[11])
+                        #     ji_ti_hou_jin_e = float(td_contents[12])
+                        #     dang_qi_ye_ji_bao_chou = ji_ti_qian_jin_e - ji_ti_hou_jin_e
+                        #     if not (meng_xi_info.get('产品名称', 0)):
+                        #         meng_xi_info['产品名称'] = get_initials(ming_cheng[:2])
+                        #         meng_xi_info['净值日期'] = jing_zhi_ri_qi
+                        #         meng_xi_info['计提前金额'] = ji_ti_qian_jin_e
+                        #         meng_xi_info['计提后金额'] = ji_ti_hou_jin_e
+                        #         meng_xi_info['当期业绩报酬'] = dang_qi_ye_ji_bao_chou
+                        #         meng_xi_info['持有份额'] = fen_e
+                        #         meng_xi_info['单位净值'] = dan_wei_jing_zhi
+                        #         meng_xi_info['虚拟净值'] = xu_ni_jing_zhi
+    df = pd.DataFrame([wan_yan_1_info, wan_yan_3_info, kai_du_info, liang_chuang_info])
     df = df.sort_values(by="计提前金额", ascending=False).set_index("产品名称", drop=True)
     ji_ti_qian_zong_jin_e = round(df['计提前金额'].sum(), 2)
     ji_ti_hou_zong_jin_e = round(df['计提后金额'].sum(), 2)
@@ -295,7 +337,7 @@ def extract_email(secret_key):
 def show_hedging_calculator():
     # 打印对冲计算器
     st.subheader("对冲计算器")
-    long_money = st.text_input("请输入考虑杠杆的资金总额（万元）：", "")
+    long_money = st.text_input("请输入考虑杠杆的多头持仓（万元）：", "")
 
     if "compute_button_clicked" not in st.session_state:
         st.session_state.compute_button_clicked = False
