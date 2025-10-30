@@ -181,7 +181,7 @@ def extract_email(secret_key):
                             dan_wei_jing_zhi = float(td_contents[7].replace(',',''))
                             xu_ni_jing_zhi = float(td_contents[6].replace(',',''))
                             ji_ti_qian_jin_e = fen_e * dan_wei_jing_zhi
-                            dang_qi_ye_ji_bao_chou = float(td_contents[5])
+                            dang_qi_ye_ji_bao_chou = float(td_contents[5].replace(',',''))
                             ji_ti_hou_jin_e = ji_ti_qian_jin_e - dang_qi_ye_ji_bao_chou
                             if not (qing_yan_he_xin_info.get('产品名称', 0)):
                                 qing_yan_he_xin_info['产品名称'] = f"{get_initials(ming_cheng[:2])}({get_initials(ming_cheng[2:4])})"
