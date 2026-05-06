@@ -88,9 +88,9 @@ def extract_email(secret_key):
     email_server.select('INBOX')  # 选择【收件箱】
     # 选择收件箱
     beijing_time = datetime.utcnow() + timedelta(hours=8)
-    eight_days_ago = (beijing_time - timedelta(days=8)).strftime('%d-%b-%Y')
+    sixteen_days_ago = (beijing_time - timedelta(days=16)).strftime('%d-%b-%Y')
     _typ, _search_data = email_server.search(None,
-                                             'SINCE', eight_days_ago,
+                                             'SINCE', sixteen_days_ago,
                                              'SUBJECT', ("净值".encode('utf-8')),
                                              'SUBJECT', ("虚拟".encode('utf-8')))
     # 开始解析
